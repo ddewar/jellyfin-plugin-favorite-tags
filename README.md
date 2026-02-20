@@ -30,7 +30,7 @@ Automatically sync Jellyfin user favorites to Sonarr/Radarr tags.
 
 ### Installation
 
-1. Download pre-built DLL from [releases](https://github.com/your-repo/releases)
+1. Download pre-built DLL from [releases](https://github.com/ddewar/jellyfin-plugin-favorite-tags/releases)
 2. Copy to Jellyfin plugins directory
 3. Restart Jellyfin
 4. Go to Dashboard → Plugins → Favorite Tags
@@ -73,10 +73,10 @@ Automatically sync Jellyfin user favorites to Sonarr/Radarr tags.
 
 ## System Requirements
 
-- **Jellyfin:** 10.8.x or later
+- **Jellyfin:** 10.11.6 or later
 - **Sonarr:** v3 API (optional)
 - **Radarr:** v3 API (optional)
-- **.NET 8.0:** For building from source
+- **.NET 9.0:** For building from source
 
 *At least one of Sonarr or Radarr must be configured*
 
@@ -86,9 +86,9 @@ Automatically sync Jellyfin user favorites to Sonarr/Radarr tags.
 
 ```bash
 # Build release
-dotnet build -c Release
+dotnet build src/jellyfin-plugin-favorite-tags.csproj -c Release
 
-# DLL location: src/bin/Release/net8.0/jellyfin-plugin-favorite-tags.dll
+# DLL location: src/bin/Release/net9.0/Jellyfin.Plugin.FavoriteTags.dll
 ```
 
 ### Run Tests

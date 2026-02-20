@@ -59,3 +59,7 @@ docs/_build/
 # Development environment
 .venv
 venv/
+
+# GitHub Actions build artifacts
+artifacts/
+release/

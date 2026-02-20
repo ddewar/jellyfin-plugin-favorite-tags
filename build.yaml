@@ -1,0 +1,36 @@
+name: "Favorite Tags"
+guid: "31c2771f-dda9-4987-ad1a-5476173cd286"
+version: "0.1.0.0"
+targetAbi: "10.11.0.0"
+framework: "net9.0"
+owner: "ddewar"
+overview: "Automatically sync Jellyfin user favorites to Sonarr/Radarr tags for deletion protection"
+description: |
+  Favorite Tags monitors user-favorited items in Jellyfin and automatically applies tags in Sonarr and Radarr.
+
+  Features:
+  - Multi-user favorite aggregation
+  - Scheduled automatic syncing
+  - Dry-run preview mode
+  - Smart TVDB/IMDB ID matching
+  - Admin dashboard for configuration
+  - Comprehensive logging and error handling
+
+  Ideal for use with deletion protection systems like Jellysweep.
+category: "Metadata"
+artifacts:
+  - "Jellyfin.Plugin.FavoriteTags.dll"
+changelog: |
+  ## 0.1.0.0
+
+  Initial public release with full functionality:
+  - Sync Jellyfin user favorites to Sonarr/Radarr tags
+  - Multi-user favorite aggregation across all users
+  - Manual sync with test buttons for Sonarr/Radarr connections
+  - Detailed dry-run output showing exact changes
+  - Auto-scheduling with configurable intervals (0 = manual only)
+  - Scheduled task visible in Jellyfin dashboard
+  - Track last sync time to prevent duplicate runs
+  - Remove tags from unfavorited items
+  - Idempotent operations (safe to run multiple times)
+  - Security hardened: authentication on all endpoints, no API key leaks, sanitized logs

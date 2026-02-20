@@ -34,7 +34,7 @@ public class FavoriteTagsPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public override string Name => "Favorite Tags";
 
     /// <inheritdoc />
-    public override Guid Id => Guid.Parse("a4b4b4b4-b4b4-b4b4-b4b4-b4b4b4b4b4b4");
+    public override Guid Id => Guid.Parse("31c2771f-dda9-4987-ad1a-5476173cd286");
 
     /// <inheritdoc />
     public override string? Description => "Automatically sync Jellyfin user favorites to Sonarr/Radarr tags";
