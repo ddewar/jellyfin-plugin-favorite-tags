@@ -1,0 +1,10 @@
+{
+  "name": "Favorite Tags",
+  "description": "Automatically sync Jellyfin user favorites to Sonarr/Radarr tags",
+  "version": "0.1.0",
+  "targetAbi": "10.11.6",
+  "author": "Developer",
+  "overview": "Automatically sync Jellyfin user favorites to Sonarr/Radarr tags for deletion protection.",
+  "category": "Metadata",
+  "guid": "a4b4b4b4-b4b4-b4b4-b4b4-b4b4b4b4b4b4"
+}

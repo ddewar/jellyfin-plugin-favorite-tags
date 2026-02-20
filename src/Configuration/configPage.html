@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Favorite Tags</title>
+</head>
+<body>
+    <div id="favoriteTagsConfigurationPage" data-role="page" class="page type-interior pluginConfigurationPage">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="favoriteTagsConfigurationForm">
+                    <div class="verticalSection verticalSection-extrabottompadding">
+                        <div class="sectionTitleContainer flex align-items-center">
+                            <h2 class="sectionTitle">Sonarr Settings</h2>
+                        </div>
+                        <div class="inputContainer">
+                            <label for="sonarrUrl">Sonarr URL:</label>
+                            <input type="url" id="sonarrUrl" name="SonarrUrl" is="emby-input" placeholder="http://sonarr:8989" />
+                            <div class="fieldDescription">The URL to your Sonarr instance</div>
+                        </div>
+                        <div class="inputContainer">
+                            <label for="sonarrApiKey">Sonarr API Key:</label>
+                            <input type="text" id="sonarrApiKey" name="SonarrApiKey" is="emby-input" placeholder="Enter API key" />
+                            <div class="fieldDescription">Your Sonarr API key from settings</div>
+                        </div>
+
+                        <div class="sectionTitleContainer flex align-items-center" style="margin-top: 30px;">
+                            <h2 class="sectionTitle">Radarr Settings</h2>
+                        </div>
+                        <div class="inputContainer">
+                            <label for="radarrUrl">Radarr URL:</label>
+                            <input type="url" id="radarrUrl" name="RadarrUrl" is="emby-input" placeholder="http://radarr:7878" />
+                            <div class="fieldDescription">The URL to your Radarr instance</div>
+                        </div>
+                        <div class="inputContainer">
+                            <label for="radarrApiKey">Radarr API Key:</label>
+                            <input type="text" id="radarrApiKey" name="RadarrApiKey" is="emby-input" placeholder="Enter API key" />
+                            <div class="fieldDescription">Your Radarr API key from settings</div>
+                        </div>
+
+                        <div class="sectionTitleContainer flex align-items-center" style="margin-top: 30px;">
+                            <h2 class="sectionTitle">Sync Settings</h2>
+                        </div>
+                        <div class="inputContainer">
+                            <label for="tagName">Tag Name:</label>
+                            <input type="text" id="tagName" name="TagName" is="emby-input" placeholder="jellyfin-favorited" />
+                            <div class="fieldDescription">The tag name to apply to favorited items in Sonarr/Radarr</div>
+                        </div>
+                        <div class="inputContainer">
+                            <label for="syncIntervalHours">Sync Interval (hours):</label>
+                            <input type="number" id="syncIntervalHours" name="SyncIntervalHours" is="emby-input" min="0.25" step="0.25" />
+                            <div class="fieldDescription">How often to sync favorites automatically</div>
+                        </div>
+
+                        <div style="margin-top: 30px;">
+                            <button is="emby-button" type="submit" class="raised button-submit block">
+                                <span>Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        console.log('[FavoriteTags] Configuration page script starting');
+
+        var FavoriteTagsConfig = {
+            pluginUniqueId: 'a4b4b4b4-b4b4-b4b4-b4b4-b4b4b4b4b4b4'
+        };
+
+        try {
+            var pageElement = document.querySelector('#favoriteTagsConfigurationPage');
+            console.log('[FavoriteTags] Page element found:', !!pageElement);
+
+            if (pageElement) {
+                pageElement.addEventListener('pageshow', function () {
+                    console.log('[FavoriteTags] Page show event fired');
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(FavoriteTagsConfig.pluginUniqueId).then(function (config) {
+                        console.log('[FavoriteTags] Configuration loaded:', config);
+                        document.querySelector('#sonarrUrl').value = config.SonarrUrl || '';
+                        document.querySelector('#sonarrApiKey').value = config.SonarrApiKey || '';
+                        document.querySelector('#radarrUrl').value = config.RadarrUrl || '';
+                        document.querySelector('#radarrApiKey').value = config.RadarrApiKey || '';
+                        document.querySelector('#tagName').value = config.TagName || 'jellyfin-favorited';
+                        document.querySelector('#syncIntervalHours').value = config.SyncIntervalHours || 1;
+                        Dashboard.hideLoadingMsg();
+                    }).catch(function(err) {
+                        console.error('[FavoriteTags] Error loading configuration:', err);
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+            }
+
+            var formElement = document.querySelector('#favoriteTagsConfigurationForm');
+            console.log('[FavoriteTags] Form element found:', !!formElement);
+
+            if (formElement) {
+                formElement.addEventListener('submit', function (e) {
+                    console.log('[FavoriteTags] Form submit event fired');
+                    e.preventDefault();
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(FavoriteTagsConfig.pluginUniqueId).then(function (config) {
+                        console.log('[FavoriteTags] Current config retrieved, updating...');
+                        config.SonarrUrl = document.querySelector('#sonarrUrl').value;
+                        config.SonarrApiKey = document.querySelector('#sonarrApiKey').value;
+                        config.RadarrUrl = document.querySelector('#radarrUrl').value;
+                        config.RadarrApiKey = document.querySelector('#radarrApiKey').value;
+                        config.TagName = document.querySelector('#tagName').value;
+                        config.SyncIntervalHours = parseFloat(document.querySelector('#syncIntervalHours').value);
+
+                        console.log('[FavoriteTags] Saving config:', config);
+                        ApiClient.updatePluginConfiguration(FavoriteTagsConfig.pluginUniqueId, config).then(function (result) {
+                            console.log('[FavoriteTags] Configuration saved:', result);
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        }).catch(function(err) {
+                            console.error('[FavoriteTags] Error saving configuration:', err);
+                            Dashboard.hideLoadingMsg();
+                        });
+                    }).catch(function(err) {
+                        console.error('[FavoriteTags] Error getting configuration:', err);
+                        Dashboard.hideLoadingMsg();
+                    });
+
+                    return false;
+                });
+            }
+
+            console.log('[FavoriteTags] Configuration page script fully initialized');
+        } catch (ex) {
+            console.error('[FavoriteTags] Script error:', ex);
+        }
+    </script>
+</body>
+</html>

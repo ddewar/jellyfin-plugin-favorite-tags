@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favorite Tags - Jellyfin Plugin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #101010;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .card {
+            background: #202020;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #bbb;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            background: #101010;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #666;
+            background: #151515;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #667bc6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #7a8dd6;
+        }
+
+        button.secondary {
+            background: #444;
+        }
+
+        button.secondary:hover {
+            background: #555;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .status-item {
+            padding: 10px;
+            background: #151515;
+            border-radius: 4px;
+            border-left: 3px solid #667bc6;
+        }
+
+        .status-value {
+            display: block;
+            font-size: 16px;
+            color: #e0e0e0;
+            margin-top: 5px;
+        }
+
+        .message {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .message.success {
+            background: #1b4620;
+            color: #7cfc00;
+            border: 1px solid #2d6e3a;
+        }
+
+        .message.error {
+            background: #4b1a1a;
+            color: #ff6b6b;
+            border: 1px solid #6b2a2a;
+        }
+
+        .message.info {
+            background: #1a3a4b;
+            color: #87ceeb;
+            border: 1px solid #2a5a6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Favorite Tags Plugin</h1>
+            <p class="subtitle">Automatically sync Jellyfin user favorites to Sonarr/Radarr tags</p>
+        </div>
+
+        <!-- Status Section -->
+        <div class="card">
+            <h2>Status</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <label>Plugin Enabled:</label>
+                    <span class="status-value" id="pluginEnabled">-</span>
+                </div>
+                <div class="status-item">
+                    <label>Sync Running:</label>
+                    <span class="status-value" id="syncRunning">-</span>
+                </div>
+                <div class="status-item">
+                    <label>Last Sync:</label>
+                    <span class="status-value" id="lastSync">Never</span>
+                </div>
+            </div>
+            <div id="statusMessage"></div>
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="card">
+            <h2>Configuration</h2>
+            <form id="configForm" onsubmit="saveConfig(event)">
+                <h3 style="margin: 15px 0 10px 0; font-size: 14px;">Sonarr Settings</h3>
+                <div class="form-group">
+                    <label for="sonarrUrl">Sonarr URL:</label>
+                    <input type="url" id="sonarrUrl" placeholder="http://sonarr:8989" value="">
+                </div>
+                <div class="form-group">
+                    <label for="sonarrApiKey">Sonarr API Key:</label>
+                    <input type="text" id="sonarrApiKey" placeholder="Enter API key" value="">
+                </div>
+                <button type="button" onclick="testSonarr()" class="secondary">Test Sonarr Connection</button>
+
+                <h3 style="margin: 20px 0 10px 0; font-size: 14px;">Radarr Settings</h3>
+                <div class="form-group">
+                    <label for="radarrUrl">Radarr URL:</label>
+                    <input type="url" id="radarrUrl" placeholder="http://radarr:7878" value="">
+                </div>
+                <div class="form-group">
+                    <label for="radarrApiKey">Radarr API Key:</label>
+                    <input type="text" id="radarrApiKey" placeholder="Enter API key" value="">
+                </div>
+                <button type="button" onclick="testRadarr()" class="secondary">Test Radarr Connection</button>
+
+                <h3 style="margin: 20px 0 10px 0; font-size: 14px;">Sync Settings</h3>
+                <div class="form-group">
+                    <label for="tagName">Tag Name:</label>
+                    <input type="text" id="tagName" placeholder="jellyfin-favorited" value="jellyfin-favorited">
+                </div>
+                <div class="form-group">
+                    <label for="syncInterval">Sync Interval (hours):</label>
+                    <input type="number" id="syncInterval" placeholder="1" value="1" min="0.25" step="0.25">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="enabled" checked> Enable Plugin
+                    </label>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit">Save Configuration</button>
+                    <button type="button" onclick="manualSync()" class="secondary">Manual Sync</button>
+                    <button type="button" onclick="dryRun()" class="secondary">Dry Run</button>
+                </div>
+            </form>
+            <div id="configMessage"></div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="card">
+            <h2>About</h2>
+            <p>This plugin automatically syncs your Jellyfin user favorites to Sonarr and Radarr tags.</p>
+            <p style="margin-top: 10px; color: #888; font-size: 12px;">
+                Version 0.1.0 | For help, see the documentation
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Load configuration on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConfig();
+            updateStatus();
+            setInterval(updateStatus, 30000); // Update status every 30 seconds
+        });
+
+        async function loadConfig() {
+            try {
+                const response = await fetch('/Plugins/FavoriteTags/Configuration');
+                if (response.ok) {
+                    const config = await response.json();
+                    document.getElementById('sonarrUrl').value = config.sonarrUrl || '';
+                    document.getElementById('sonarrApiKey').value = config.sonarrApiKey || '';
+                    document.getElementById('radarrUrl').value = config.radarrUrl || '';
+                    document.getElementById('radarrApiKey').value = config.radarrApiKey || '';
+                    document.getElementById('tagName').value = config.tagName || 'jellyfin-favorited';
+                    document.getElementById('syncInterval').value = config.syncIntervalHours || 1;
+                    document.getElementById('enabled').checked = config.enabled !== false;
+                }
+            } catch (e) {
+                showMessage('Failed to load configuration', 'error');
+            }
+        }
+
+        async function saveConfig(e) {
+            e.preventDefault();
+            const config = {
+                sonarrUrl: document.getElementById('sonarrUrl').value,
+                sonarrApiKey: document.getElementById('sonarrApiKey').value,
+                radarrUrl: document.getElementById('radarrUrl').value,
+                radarrApiKey: document.getElementById('radarrApiKey').value,
+                tagName: document.getElementById('tagName').value,
+                syncIntervalHours: parseFloat(document.getElementById('syncInterval').value),
+                enabled: document.getElementById('enabled').checked
+            };
+
+            try {
+                const response = await fetch('/Plugins/FavoriteTags/Configuration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                if (response.ok) {
+                    showMessage('Configuration saved successfully!', 'success');
+                } else {
+                    showMessage('Failed to save configuration', 'error');
+                }
+            } catch (e) {
+                showMessage('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function testSonarr() {
+            try {
+                const response = await fetch('/Plugins/FavoriteTags/Test/Sonarr', { method: 'POST' });
+                const result = await response.json();
+                showMessage(result.message, result.success ? 'success' : 'error');
+            } catch (e) {
+                showMessage('Connection failed: ' + e.message, 'error');
+            }
+        }
+
+        async function testRadarr() {
+            try {
+                const response = await fetch('/Plugins/FavoriteTags/Test/Radarr', { method: 'POST' });
+                const result = await response.json();
+                showMessage(result.message, result.success ? 'success' : 'error');
+            } catch (e) {
+                showMessage('Connection failed: ' + e.message, 'error');
+            }
+        }
+
+        async function manualSync() {
+            try {
+                const response = await fetch('/Plugins/FavoriteTags/Sync', { method: 'POST' });
+                const result = await response.json();
+                showMessage(`Sync completed: ${result.message}`, 'success');
+                updateStatus();
+            } catch (e) {
+                showMessage('Sync failed: ' + e.message, 'error');
+            }
+        }
+
+        async function dryRun() {
+            try {
+                const response = await fetch('/Plugins/FavoriteTags/Sync/DryRun', { method: 'POST' });
+                const result = await response.json();
+                showMessage(`Dry run: ${result.message}`, 'info');
+            } catch (e) {
+                showMessage('Dry run failed: ' + e.message, 'error');
+            }
+        }
+
+        async function updateStatus() {
+            try {
+                const response = await fetch('/Plugins/FavoriteTags/Status');
+                const status = await response.json();
+                document.getElementById('pluginEnabled').textContent = status.enabled ? 'Yes' : 'No';
+                document.getElementById('syncRunning').textContent = status.running ? 'Yes' : 'No';
+                document.getElementById('lastSync').textContent = status.lastSync || 'Never';
+            } catch (e) {
+                console.log('Could not update status');
+            }
+        }
+
+        function showMessage(msg, type) {
+            const msgDiv = document.getElementById('configMessage');
+            msgDiv.innerHTML = `<div class="message ${type}">${msg}</div>`;
+            setTimeout(() => { msgDiv.innerHTML = ''; }, 5000);
+        }
+    </script>
+</body>
+</html>

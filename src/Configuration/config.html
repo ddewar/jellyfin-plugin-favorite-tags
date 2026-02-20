@@ -1,0 +1,228 @@
+<div id="favoriteTagsConfigurationPage" data-role="page" class="page type-interior pluginConfigurationPage">
+    <div data-role="content">
+        <div class="content-primary">
+            <form id="favoriteTagsConfigurationForm">
+                <div class="verticalSection verticalSection-extrabottompadding">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">Sonarr Settings</h2>
+                    </div>
+                    <div class="inputContainer">
+                        <label for="sonarrUrl">Sonarr URL:</label>
+                        <input type="url" id="sonarrUrl" name="SonarrUrl" is="emby-input" placeholder="http://sonarr:8989" />
+                        <div class="fieldDescription">The URL to your Sonarr instance</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label for="sonarrApiKey">Sonarr API Key:</label>
+                        <input type="text" id="sonarrApiKey" name="SonarrApiKey" is="emby-input" placeholder="Enter API key" />
+                        <div class="fieldDescription">Your Sonarr API key from settings</div>
+                    </div>
+                    <button type="button" id="testSonarrBtn" is="emby-button" class="raised button-alt">Test Sonarr Connection</button>
+                    <div id="sonarrTestResult" style="margin-top: 10px;"></div>
+
+                    <div class="sectionTitleContainer flex align-items-center" style="margin-top: 30px;">
+                        <h2 class="sectionTitle">Radarr Settings</h2>
+                    </div>
+                    <div class="inputContainer">
+                        <label for="radarrUrl">Radarr URL:</label>
+                        <input type="url" id="radarrUrl" name="RadarrUrl" is="emby-input" placeholder="http://radarr:7878" />
+                        <div class="fieldDescription">The URL to your Radarr instance</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label for="radarrApiKey">Radarr API Key:</label>
+                        <input type="text" id="radarrApiKey" name="RadarrApiKey" is="emby-input" placeholder="Enter API key" />
+                        <div class="fieldDescription">Your Radarr API key from settings</div>
+                    </div>
+                    <button type="button" id="testRadarrBtn" is="emby-button" class="raised button-alt">Test Radarr Connection</button>
+                    <div id="radarrTestResult" style="margin-top: 10px;"></div>
+
+                    <div class="sectionTitleContainer flex align-items-center" style="margin-top: 30px;">
+                        <h2 class="sectionTitle">Sync Settings</h2>
+                    </div>
+                    <div class="inputContainer">
+                        <label for="tagName">Tag Name:</label>
+                        <input type="text" id="tagName" name="TagName" is="emby-input" placeholder="jellyfin-favorited" />
+                        <div class="fieldDescription">The tag name to apply to favorited items in Sonarr/Radarr</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label for="syncIntervalHours">Sync Interval (hours):</label>
+                        <input type="number" id="syncIntervalHours" name="SyncIntervalHours" is="emby-input" min="0" step="0.25" />
+                        <div class="fieldDescription">How often to sync automatically. Set to 0 to disable auto-scheduling (manual sync only via buttons below)</div>
+                    </div>
+
+                    <div class="sectionTitleContainer flex align-items-center" style="margin-top: 30px;">
+                        <h2 class="sectionTitle">Actions</h2>
+                    </div>
+                    <button type="button" id="manualSyncBtn" is="emby-button" class="raised button-alt">Manual Sync</button>
+                    <button type="button" id="dryRunBtn" is="emby-button" class="raised button-alt">Dry Run</button>
+                    <div id="syncResult" style="margin-top: 10px;"></div>
+
+                    <div style="margin-top: 30px;">
+                        <button is="emby-button" type="submit" class="raised button-submit block">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var FavoriteTagsConfiguration = {
+            pluginUniqueId: 'a4b4b4b4-b4b4-b4b4-b4b4-b4b4b4b4b4b4'
+        };
+
+        document.querySelector('#favoriteTagsConfigurationPage')
+            .addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(FavoriteTagsConfiguration.pluginUniqueId).then(function (config) {
+                    document.querySelector('#sonarrUrl').value = config.SonarrUrl || '';
+                    document.querySelector('#sonarrApiKey').value = config.SonarrApiKey || '';
+                    document.querySelector('#radarrUrl').value = config.RadarrUrl || '';
+                    document.querySelector('#radarrApiKey').value = config.RadarrApiKey || '';
+                    document.querySelector('#tagName').value = config.TagName || 'jellyfin-favorited';
+                    document.querySelector('#syncIntervalHours').value = config.SyncIntervalHours || 1;
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+        document.querySelector('#favoriteTagsConfigurationForm')
+            .addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(FavoriteTagsConfiguration.pluginUniqueId).then(function (config) {
+                    config.SonarrUrl = document.querySelector('#sonarrUrl').value;
+                    config.SonarrApiKey = document.querySelector('#sonarrApiKey').value;
+                    config.RadarrUrl = document.querySelector('#radarrUrl').value;
+                    config.RadarrApiKey = document.querySelector('#radarrApiKey').value;
+                    config.TagName = document.querySelector('#tagName').value;
+                    config.SyncIntervalHours = parseFloat(document.querySelector('#syncIntervalHours').value);
+
+                    ApiClient.updatePluginConfiguration(FavoriteTagsConfiguration.pluginUniqueId, config).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    });
+                });
+
+                return false;
+            });
+
+        // Test Sonarr Connection
+        var testSonarrBtn = document.querySelector('#testSonarrBtn');
+        if (testSonarrBtn) {
+            testSonarrBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                var resultDiv = document.querySelector('#sonarrTestResult');
+                resultDiv.innerHTML = '';
+
+                var url = document.querySelector('#sonarrUrl').value;
+                var apiKey = document.querySelector('#sonarrApiKey').value;
+
+                if (!url || !apiKey) {
+                    Dashboard.hideLoadingMsg();
+                    resultDiv.innerHTML = '<div style="color: red;">Please enter both URL and API Key</div>';
+                    return;
+                }
+
+                ApiClient.ajax({
+                    type: 'POST',
+                    url: ApiClient.getUrl('/Plugins/FavoriteTags/Test/Sonarr'),
+                    data: JSON.stringify({ url: url, apiKey: apiKey }),
+                    dataType: 'json',
+                    contentType: 'application/json'
+                }).then(function (result) {
+                    Dashboard.hideLoadingMsg();
+                    var color = result.success ? 'green' : 'red';
+                    var message = result.success ? '✓ Connected to Sonarr' : '✗ Failed: ' + (result.message || 'Unknown error');
+                    resultDiv.innerHTML = '<div style="color: ' + color + ';">' + message + '</div>';
+                }).catch(function (e) {
+                    Dashboard.hideLoadingMsg();
+                    resultDiv.innerHTML = '<div style="color: red;">Error: ' + e.message + '</div>';
+                });
+            });
+        }
+
+        // Test Radarr Connection
+        var testRadarrBtn = document.querySelector('#testRadarrBtn');
+        if (testRadarrBtn) {
+            testRadarrBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                var resultDiv = document.querySelector('#radarrTestResult');
+                resultDiv.innerHTML = '';
+
+                var url = document.querySelector('#radarrUrl').value;
+                var apiKey = document.querySelector('#radarrApiKey').value;
+
+                if (!url || !apiKey) {
+                    Dashboard.hideLoadingMsg();
+                    resultDiv.innerHTML = '<div style="color: red;">Please enter both URL and API Key</div>';
+                    return;
+                }
+
+                ApiClient.ajax({
+                    type: 'POST',
+                    url: ApiClient.getUrl('/Plugins/FavoriteTags/Test/Radarr'),
+                    data: JSON.stringify({ url: url, apiKey: apiKey }),
+                    dataType: 'json',
+                    contentType: 'application/json'
+                }).then(function (result) {
+                    Dashboard.hideLoadingMsg();
+                    var color = result.success ? 'green' : 'red';
+                    var message = result.success ? '✓ Connected to Radarr' : '✗ Failed: ' + (result.message || 'Unknown error');
+                    resultDiv.innerHTML = '<div style="color: ' + color + ';">' + message + '</div>';
+                }).catch(function (e) {
+                    Dashboard.hideLoadingMsg();
+                    resultDiv.innerHTML = '<div style="color: red;">Error: ' + e.message + '</div>';
+                });
+            });
+        }
+
+        // Manual Sync
+        var manualSyncBtn = document.querySelector('#manualSyncBtn');
+        if (manualSyncBtn) {
+            manualSyncBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                var resultDiv = document.querySelector('#syncResult');
+                resultDiv.innerHTML = '';
+
+                ApiClient.ajax({
+                    type: 'POST',
+                    url: ApiClient.getUrl('/Plugins/FavoriteTags/Sync'),
+                    dataType: 'json'
+                }).then(function (result) {
+                    Dashboard.hideLoadingMsg();
+                    var color = result.Success ? 'green' : 'red';
+                    var message = (result.Success ? '✓ ' : '✗ ') + (result.Message || 'Sync completed');
+                    resultDiv.innerHTML = '<div style="color: ' + color + ';">Sync: ' + message + '</div>';
+                }).catch(function (e) {
+                    Dashboard.hideLoadingMsg();
+                    resultDiv.innerHTML = '<div style="color: red;">Error: ' + e.message + '</div>';
+                });
+            });
+        }
+
+        // Dry Run
+        var dryRunBtn = document.querySelector('#dryRunBtn');
+        if (dryRunBtn) {
+            dryRunBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                var resultDiv = document.querySelector('#syncResult');
+                resultDiv.innerHTML = '';
+
+                ApiClient.ajax({
+                    type: 'POST',
+                    url: ApiClient.getUrl('/Plugins/FavoriteTags/Sync/DryRun'),
+                    dataType: 'json'
+                }).then(function (result) {
+                    Dashboard.hideLoadingMsg();
+                    resultDiv.innerHTML = '<div style="color: blue;">Dry Run: ' + (result.Message || 'Preview mode') + '</div>';
+                }).catch(function (e) {
+                    Dashboard.hideLoadingMsg();
+                    resultDiv.innerHTML = '<div style="color: red;">Error: ' + e.message + '</div>';
+                });
+            });
+        }
+    </script>
+</div>

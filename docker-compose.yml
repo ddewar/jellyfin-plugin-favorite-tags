@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin-test
+    restart: unless-stopped
+    ports:
+      - "8096:8096"
+    volumes:
+      - ./test-data/jellyfin/config:/config
+      - ./test-data/jellyfin/cache:/cache
+      - ./plugins:/config/plugins
+    environment:
+      - JELLYFIN_FFmpeg=/usr/lib/jellyfin-ffmpeg/ffmpeg
+    networks:
+      - favorite-tags-network
+
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr-test
+    restart: unless-stopped
+    ports:
+      - "8989:8989"
+    volumes:
+      - ./test-data/sonarr/config:/config
+      - ./test-data/sonarr/downloads:/downloads
+      - ./test-data/sonarr/tv:/tv
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    networks:
+      - favorite-tags-network
+
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr-test
+    restart: unless-stopped
+    ports:
+      - "7878:7878"
+    volumes:
+      - ./test-data/radarr/config:/config
+      - ./test-data/radarr/downloads:/downloads
+      - ./test-data/radarr/movies:/movies
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    networks:
+      - favorite-tags-network
+
+networks:
+  favorite-tags-network:
+    driver: bridge
