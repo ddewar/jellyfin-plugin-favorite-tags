@@ -55,8 +55,7 @@ jobs:
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v1
       with:
+        token: ${{ secrets.GITHUB_TOKEN }}
         files: |
           release/jellyfin-plugin-favorite-tags-${{ steps.get_version.outputs.version }}.zip
           release/jellyfin-plugin-favorite-tags-${{ steps.get_version.outputs.version }}.zip.md5
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
