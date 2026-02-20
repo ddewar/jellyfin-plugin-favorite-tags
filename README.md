@@ -28,14 +28,28 @@ Automatically sync Jellyfin user favorites to Sonarr/Radarr tags.
 
 ## Quick Start
 
-### Installation
+### Installation (Recommended)
 
-1. Download pre-built DLL from [releases](https://github.com/ddewar/jellyfin-plugin-favorite-tags/releases)
+**Add via Plugin Repository (easiest):**
+
+1. Open Jellyfin Dashboard
+2. Go to **Plugins** → **Repositories**
+3. Click **+** button to add repository
+4. Paste: `https://raw.githubusercontent.com/ddewar/jellyfin-plugin-favorite-tags/main/repository.json`
+5. Click **Add**
+6. Go to **Catalog** tab
+7. Find "Favorite Tags" and click **Install**
+8. Restart Jellyfin
+9. Go to Dashboard → Plugins → Favorite Tags
+10. Configure Sonarr/Radarr URLs and API keys
+11. Test connections and save
+
+**Alternative: Manual Install from Releases**
+
+1. Download DLL from [releases](https://github.com/ddewar/jellyfin-plugin-favorite-tags/releases)
 2. Copy to Jellyfin plugins directory
 3. Restart Jellyfin
-4. Go to Dashboard → Plugins → Favorite Tags
-5. Configure Sonarr/Radarr URLs and API keys
-6. Test connections and save
+4. Configure plugin
 
 **Detailed:** See [INSTALLATION.md](docs/INSTALLATION.md)
 
