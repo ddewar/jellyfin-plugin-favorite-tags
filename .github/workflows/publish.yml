@@ -53,10 +53,10 @@ jobs:
 
     - name: Upload release assets
       if: github.event_name == 'release'
-      uses: softprops/action-gh-release@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        files: |
-          release/jellyfin-plugin-favorite-tags-${{ steps.get_version.outputs.version }}.zip
-          release/jellyfin-plugin-favorite-tags-${{ steps.get_version.outputs.version }}.zip.md5
-        overwrite: true
+      run: |
+        gh release upload ${{ github.event.release.tag_name }} \
+          release/jellyfin-plugin-favorite-tags-${{ steps.get_version.outputs.version }}.zip \
+          release/jellyfin-plugin-favorite-tags-${{ steps.get_version.outputs.version }}.zip.md5 \
+          --clobber
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
